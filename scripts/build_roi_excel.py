@@ -9,17 +9,6 @@ import pandas as pd
 from scipy.io import loadmat
 
 
-GROUPS = {
-    "LIHONGJUAN": 1,
-    "LISHUQIN": 1,
-    "LIUXIANZHANG": 1,
-    "ZHANGJIEQING": 1,
-    "CHENGJINGHUA": 2,
-    "LIUZHAOLIN": 2,
-    "ZHANGYAN": 2,
-    "ZHAOCHUNYAN": 2,
-}
-
 ROI_CHANNELS = {
     "lPFC": [8, 9, 11, 22, 20, 23, 10],
     "rPFC": [3, 5, 6, 7, 17, 19, 21],
@@ -42,6 +31,17 @@ def parse_condition_map(items: list[str]) -> dict[str, str]:
     return mapping
 
 
+def parse_groups(group1: list[str], group2: list[str]) -> dict[str, int]:
+    groups = {subject.upper(): 1 for subject in group1}
+    overlap = sorted(set(groups) & {subject.upper() for subject in group2})
+    if overlap:
+        raise ValueError(f"Subjects cannot appear in both groups: {overlap}")
+    groups.update({subject.upper(): 2 for subject in group2})
+    if not groups:
+        raise ValueError("At least one subject ID is required")
+    return groups
+
+
 def get_field(obj: Any, name: str) -> Any:
     if hasattr(obj, name):
         return getattr(obj, name)
@@ -54,9 +54,13 @@ def as_1d_float(values: Any) -> np.ndarray:
     return np.asarray(values, dtype=float).reshape(-1)
 
 
-def find_subject_and_condition(path: Path, condition_map: dict[str, str]) -> tuple[str, str, str]:
+def find_subject_and_condition(
+    path: Path,
+    condition_map: dict[str, str],
+    groups: dict[str, int],
+) -> tuple[str, str, str]:
     parts_upper = [part.upper() for part in path.parts]
-    subject = next((name for name in GROUPS if name in parts_upper), None)
+    subject = next((name for name in groups if name in parts_upper), None)
     source_condition = next((cond for cond in condition_map if cond in parts_upper), None)
     if subject is None or source_condition is None:
         raise ValueError(f"Cannot parse subject/condition from path: {path}")
@@ -91,6 +95,8 @@ def main() -> None:
     parser.add_argument("--source-root", required=True)
     parser.add_argument("--output-xlsx", required=True)
     parser.add_argument("--conditions", required=True, nargs="+", help="SOURCE:LABEL pairs, e.g. LOU:TC1 DAO:TC2 YUN:TC3")
+    parser.add_argument("--group1", required=True, nargs="+", help="Subject IDs for Group=1")
+    parser.add_argument("--group2", required=True, nargs="+", help="Subject IDs for Group=2")
     args = parser.parse_args()
 
     source_root = Path(args.source_root)
@@ -98,6 +104,7 @@ def main() -> None:
     output_xlsx.parent.mkdir(parents=True, exist_ok=True)
     condition_map = parse_condition_map(args.conditions)
     condition_labels = list(condition_map.values())
+    groups = parse_groups(args.group1, args.group2)
 
     mat_files = sorted(source_root.rglob("*.mat"))
     if not mat_files:
@@ -108,7 +115,7 @@ def main() -> None:
     long_rows = []
 
     for file_path in mat_files:
-        subject, source_condition, condition = find_subject_and_condition(file_path, condition_map)
+        subject, source_condition, condition = find_subject_and_condition(file_path, condition_map, groups)
         problem = ""
         try:
             values, exception_channel, signal_type, nch = read_beta_file(file_path)
@@ -128,7 +135,7 @@ def main() -> None:
 
         check_rows.append({
             "ID": subject,
-            "Group": GROUPS[subject],
+            "Group": groups[subject],
             "Source_Condition": source_condition,
             "Condition": condition,
             "File_Path": str(file_path),
@@ -141,10 +148,10 @@ def main() -> None:
             "Problem": problem,
         })
         for roi, value in roi_values.items():
-            long_rows.append({"ID": subject, "Group": GROUPS[subject], "Condition": condition, "ROI": roi, "Value": value})
+            long_rows.append({"ID": subject, "Group": groups[subject], "Condition": condition, "ROI": roi, "Value": value})
 
     wide_rows = []
-    for subject, group in GROUPS.items():
+    for subject, group in groups.items():
         row = {"ID": subject, "Group": group}
         for roi in ROI_CHANNELS:
             for condition in condition_labels:

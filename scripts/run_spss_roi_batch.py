@@ -108,10 +108,8 @@ def main() -> None:
     work_dir.mkdir(exist_ok=True)
 
     df = pd.read_excel(source_xlsx, sheet_name="SPSS_Wide")
-    if df.shape[0] != 8:
-        raise RuntimeError(f"Expected 8 subjects, got {df.shape[0]}")
-    if df["Group"].value_counts().sort_index().to_dict() != {1: 4, 2: 4}:
-        raise RuntimeError("Expected Group counts {1: 4, 2: 4}")
+    if "ID" not in df.columns or "Group" not in df.columns:
+        raise RuntimeError("SPSS_Wide must contain ID and Group columns")
     if int(df.isna().sum().sum()) != 0:
         raise RuntimeError("ROI sheet has missing values")
 

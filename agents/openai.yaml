@@ -1,4 +1,4 @@
 interface:
-  display_name: "皮层激活 SPSS"
-  short_description: "整理皮层激活 beta_1 数据、按 ROI 合并并生成 SPSS 输出。"
-  default_prompt: "请按皮层激活 SPSS 流程处理这些 fNIRS beta_1 数据。"
+  display_name: "Cortical Activation SPSS"
+  short_description: "Build ROI-level fNIRS cortical activation Excel files and SPSS outputs."
+  default_prompt: "Process these fNIRS cortical activation beta_1 files into ROI-level SPSS outputs."

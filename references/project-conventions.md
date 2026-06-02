@@ -2,9 +2,9 @@
 
 ## Source Layout
 
-Raw cortical activation files live under:
+Raw cortical activation files usually live under a structure like:
 
-`E:\皮层激活\<老手|新手>\<SUBJECT>\result\<TASK_CODE>\<ACTION>\Oxy\beta_1\*.mat`
+`<raw_root>\<group_folder>\<SUBJECT>\result\<TASK_CODE>\<ACTION>\Oxy\beta_1\*.mat`
 
 Each `.mat` should contain `indexdata` with fields including:
 
@@ -16,35 +16,32 @@ Each `.mat` should contain `indexdata` with fields including:
 
 ## Subject and Group Coding
 
-Group 1, 老手组:
+Use anonymized subject IDs for shared or public repositories.
 
-- LIHONGJUAN
-- LISHUQIN
-- LIUXIANZHANG
-- ZHANGJIEQING
+Example:
 
-Group 2, 新手组:
+| Group | Meaning | Example IDs |
+|---|---|---|
+| 1 | expert or experienced group | Expert01, Expert02, Expert03, Expert04 |
+| 2 | novice or comparison group | Novice01, Novice02, Novice03, Novice04 |
 
-- CHENGJINGHUA
-- LIUZHAOLIN
-- ZHANGYAN
-- ZHAOCHUNYAN
+The scripts accept subject IDs through `--group1` and `--group2`, so real names do not need to be stored in this repository.
 
 ## Task Mapping
 
-Tai Chi cortical activation:
+Tai Chi-style cortical activation:
 
-- source task folder: `result\2`
-- actions: `LOU`, `DAO`, `YUN`
-- SPSS labels: `TC1`, `TC2`, `TC3`
-- expected copied file count: `8 * 3 = 24`
+- source task folder example: `result\2`
+- source actions example: `LOU`, `DAO`, `YUN`
+- SPSS labels example: `TC1`, `TC2`, `TC3`
+- expected copied file count for 8 subjects and 3 conditions: `8 * 3 = 24`
 
-Balance cortical activation:
+Balance-style cortical activation:
 
-- source task folder: `result\1`
-- actions: `SZ`, `SB`
-- SPSS labels: `SZ`, `SB`
-- expected copied file count: `8 * 2 = 16`
+- source task folder example: `result\1`
+- source actions example: `SZ`, `SB`
+- SPSS labels example: `SZ`, `SB`
+- expected copied file count for 8 subjects and 2 conditions: `8 * 2 = 16`
 
 ## ROI Merge Rules
 
@@ -70,8 +67,8 @@ For each ROI, run one mixed repeated-measures GLM:
 - Between-subject factor: `Group`
 - Within-subject factor: `CONDITION`
 - Within levels: condition columns for that ROI
-- Example balance ROI: `lPFC_SZ lPFC_SB`
-- Example Tai Chi ROI: `lPFC_TC1 lPFC_TC2 lPFC_TC3`
+- Example 2-condition ROI: `lPFC_SZ lPFC_SB`
+- Example 3-condition ROI: `lPFC_TC1 lPFC_TC2 lPFC_TC3`
 
 Required syntax options:
 
@@ -82,4 +79,4 @@ Required syntax options:
 /DESIGN=Group
 ```
 
-For 2-condition balance data, Mauchly sphericity is not meaningful because sphericity is automatically satisfied with two levels. For 3-condition Tai Chi data, inspect Mauchly and use Greenhouse-Geisser if needed.
+For 2-condition data, Mauchly sphericity is not meaningful because sphericity is automatically satisfied with two levels. For 3-condition data, inspect Mauchly and use Greenhouse-Geisser if needed.
